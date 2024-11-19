@@ -1,3 +1,8 @@
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
+
 import DottedSeparator from "@/components/dotted-separator";
 import {
   Card,
@@ -13,17 +18,17 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { registerSchema } from "../schemas";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
-import Link from "next/link";
+
+import { registerSchema } from "../schemas";
+import { useRegister } from "../api/use-register";
 
 export default function SignUpCard() {
+  const { mutate } = useRegister();
+
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -34,7 +39,7 @@ export default function SignUpCard() {
   });
 
   const onSubmit = (values: z.infer<typeof registerSchema>) => {
-    console.log(values);
+    mutate({ json: values });
   };
 
   return (

@@ -1,3 +1,7 @@
+import { useForm } from "react-hook-form";
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
+
 import DottedSeparator from "@/components/dotted-separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -7,16 +11,17 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "../schemas";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
+
+import { useLogin } from "../api/use-login";
 
 export default function SignInCard() {
+  const { mutate } = useLogin();
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -26,7 +31,7 @@ export default function SignInCard() {
   });
 
   const onSubmit = (values: z.infer<typeof loginSchema>) => {
-    console.log(values);
+    mutate({ json: values });
   };
 
   return (
