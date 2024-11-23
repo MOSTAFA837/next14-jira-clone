@@ -27,7 +27,7 @@ import { registerSchema } from "../schemas";
 import { useRegister } from "../api/use-register";
 
 export default function SignUpCard() {
-  const { mutate } = useRegister();
+  const { mutate, isPending } = useRegister();
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -71,6 +71,7 @@ export default function SignUpCard() {
                   <FormControl>
                     <Input
                       {...field}
+                      disabled={isPending}
                       type="text"
                       placeholder="Enter your name"
                     />
@@ -87,6 +88,7 @@ export default function SignUpCard() {
                   <FormControl>
                     <Input
                       {...field}
+                      disabled={isPending}
                       type="email"
                       placeholder="Enter email address"
                     />
@@ -103,6 +105,7 @@ export default function SignUpCard() {
                   <FormControl>
                     <Input
                       {...field}
+                      disabled={isPending}
                       type="password"
                       placeholder="Enter your password"
                     />
