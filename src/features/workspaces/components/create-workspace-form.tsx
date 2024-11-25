@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { ImageIcon } from "lucide-react";
@@ -32,6 +33,7 @@ interface CreateWorkspaceFormProps {
 export default function CreateWorkspaceForm({
   onCancel,
 }: CreateWorkspaceFormProps) {
+  const router = useRouter();
   const { mutate, isPending } = useCreateWorkspace();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,9 +54,9 @@ export default function CreateWorkspaceForm({
     mutate(
       { form: finalValues },
       {
-        onSuccess: () => {
+        onSuccess: ({ data }) => {
           form.reset();
-          // TODO : Redirect to workspace page
+          router.push(`/workspaces/${data.$id}`);
         },
       }
     );
