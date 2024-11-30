@@ -1,6 +1,8 @@
+import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
+import { ID, Query } from "node-appwrite";
+
 import { sessionMiddleware } from "@/lib/session-middleware";
 import {
   DATABASE_ID,
@@ -8,11 +10,12 @@ import {
   MEMBERS_ID,
   WORKSPACES_ID,
 } from "@/config";
-import { ID, Query } from "node-appwrite";
 import { MemberRole } from "@/features/members/types";
 import { generateInviteCode } from "@/lib/utils";
 import { getMember } from "@/features/members/utils";
+
 import { Workspace } from "../types";
+import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
 
 const app = new Hono()
   .get("/", sessionMiddleware, async (c) => {
@@ -60,6 +63,24 @@ const app = new Hono()
     );
 
     return c.json({ data: workspace });
+  })
+  .get("/:workspaceId/info", sessionMiddleware, async (c) => {
+    const databases = c.get("databases");
+    const { workspaceId } = c.req.param();
+
+    const workspace = await databases.getDocument<Workspace>(
+      DATABASE_ID,
+      WORKSPACES_ID,
+      workspaceId
+    );
+
+    return c.json({
+      data: {
+        $id: workspace.$id,
+        name: workspace.name,
+        imageUrl: workspace.imageUrl,
+      },
+    });
   })
   .post(
     "/",
@@ -211,6 +232,45 @@ const app = new Hono()
     );
 
     return c.json({ data: workspace });
-  });
+  })
+  .post(
+    "/:workspaceId/join",
+    sessionMiddleware,
+    zValidator("json", z.object({ code: z.string() })),
+    async (c) => {
+      const { workspaceId } = c.req.param();
+      const { code } = c.req.valid("json");
 
+      const databases = c.get("databases");
+      const user = c.get("user");
+
+      const member = await getMember({
+        databases,
+        workspaceId,
+        userId: user.$id,
+      });
+
+      if (member) {
+        return c.json({ error: "Already a member" }, 400);
+      }
+
+      const workspace = await databases.getDocument<Workspace>(
+        DATABASE_ID,
+        WORKSPACES_ID,
+        workspaceId
+      );
+
+      if (workspace.inviteCode !== code) {
+        return c.json({ error: "Invalid invite code" }, 400);
+      }
+
+      await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
+        workspaceId,
+        userId: user.$id,
+        role: MemberRole.MEMBER,
+      });
+
+      return c.json({ data: workspace });
+    }
+  );
 export default app;
